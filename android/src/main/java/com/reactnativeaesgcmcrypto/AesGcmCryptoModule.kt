@@ -3,10 +3,8 @@ package com.reactnativeaesgcmcrypto
 import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.security.GeneralSecurityException
-import java.security.Security
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
@@ -21,13 +19,6 @@ class EncryptionOutput(val iv: ByteArray,
 class AesGcmCryptoModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
   val GCM_TAG_LENGTH = 16
   val BUFFER_SIZE = 8192
-
-  init {
-    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-      Security.addProvider(BouncyCastleProvider())
-      Log.d("AesGcmCrypto", "BouncyCastle provider registered")
-    }
-  }
 
   override fun getName(): String {
     return "AesGcmCrypto"
@@ -100,8 +91,8 @@ class AesGcmCryptoModule(reactContext: ReactApplicationContext) : ReactContextBa
       val secretKey: SecretKey = getSecretKeyFromString(keyData)
       val ivData = iv.hexStringToByteArray()
       val tagData = tag.hexStringToByteArray()
-      
-      val cipher = Cipher.getInstance("AES/GCM/NoPadding", BouncyCastleProvider.PROVIDER_NAME)
+
+      val cipher = Cipher.getInstance("AES/GCM/NoPadding")
       val spec = GCMParameterSpec(GCM_TAG_LENGTH * 8, ivData)
       cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
 
@@ -162,8 +153,7 @@ class AesGcmCryptoModule(reactContext: ReactApplicationContext) : ReactContextBa
     try {
       val keyData = Base64.getDecoder().decode(key)
       val secretKey: SecretKey = getSecretKeyFromString(keyData)
-      val cipher = Cipher.getInstance("AES/GCM/NoPadding", BouncyCastleProvider.PROVIDER_NAME)
-      Log.d("AesGcmCrypto", "Using provider: ${cipher.provider.name}")
+      val cipher = Cipher.getInstance("AES/GCM/NoPadding")
       cipher.init(Cipher.ENCRYPT_MODE, secretKey)
       val iv = cipher.iv.copyOf()
 
